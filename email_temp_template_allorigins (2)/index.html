@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Domain Anda - sherrilleyburton69.xyz</title>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+        input, button, select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            margin: 5px;
+        }
+        #inbox {
+            margin-top: 30px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .email-item {
+            border-bottom: 1px solid #333;
+            padding: 10px 0;
+        }
+        .controls {
+            margin-top: 10px;
+        }
+        #toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #0f0f0f;
+            color: #00ffae;
+            padding: 12px 20px;
+            border-radius: 5px;
+            border: 1px solid #00ffae;
+            box-shadow: 0 0 10px #000;
+            display: none;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>📬 Email Domain Anda</h1>
+    <p>Masukkan nama alamat email Anda (@sherrilleyburton69.xyz):</p>
+    <input type="text" id="emailName" placeholder="contoh: pengguna123">
+    <div class="controls">
+        <button onclick="generateEmail()">🎲 Buat Email</button>
+        <button onclick="loadInbox()">📥 Lihat Inbox</button>
+        <button onclick="copyEmail()">📋 Copy Email</button>
+        <button onclick="loadInbox()">🔄 Refresh</button>
+    </div>
+
+    <div id="inbox" style="display:none;">
+        <h2>Inbox</h2>
+        <div id="emailList">
+            <p>🔄 Memuat email...</p>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        let currentEmail = '';
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.style.display = 'none', 300);
+            }, 2000);
+        }
+
+        function generateEmail() {
+            const randomName = Math.random().toString(36).substring(2, 10);
+            document.getElementById('emailName').value = randomName;
+            showToast(`📨 Email dibuat: ${randomName}@sherrilleyburton69.xyz`);
+        }
+
+        function loadInbox() {
+            const name = document.getElementById('emailName').value.trim();
+            if (!name) return;
+            currentEmail = `${name}@sherrilleyburton69.xyz`;
+
+            showToast(`📥 Memuat inbox untuk ${currentEmail}`);
+            document.getElementById('inbox').style.display = 'block';
+
+            // Dummy tampilan, karena email aslinya masuk di Private Email
+            document.getElementById('emailList').innerHTML = `
+                <p>📬 Email untuk <b>${currentEmail}</b> akan dikirim ke inbox asli (misalnya Gmail / Private Email).</p>
+                <p>🔐 Tampilan inbox real memerlukan VPS atau integrasi backend.</p>
+            `;
+        }
+
+        function copyEmail() {
+            if (!currentEmail) return;
+            navigator.clipboard.writeText(currentEmail).then(() => {
+                showToast("📋 Alamat email disalin!");
+            });
+        }
+    </script>
+</body>
+</html>
