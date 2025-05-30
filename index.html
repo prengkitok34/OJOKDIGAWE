@@ -1,53 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <title>Inbox Mailxstres</title>
+  <meta charset="UTF-8">
+  <title>Email Domain Anda</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .email { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-    button { margin-top: 5px; }
+    body {
+      background-color: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding-top: 80px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+    }
+    input {
+      width: 220px;
+    }
+    button {
+      background-color: #eee;
+      cursor: pointer;
+    }
+    .icon {
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
-  <h2>Inbox untuk: <span id="emailUser"></span>@mailxstres.org</h2>
-  <input type="text" id="userInput" placeholder="Masukkan username...">
-  <button onclick="loadInbox()">Lihat Inbox</button>
-
-  <div id="inbox"></div>
+  <h1>📬 Email Domain Anda</h1>
+  <p>Masukkan nama alamat email Anda (<strong>@mailxstres.org</strong>):</p>
+  <input type="text" id="username" placeholder="misal: abc123">
+  <br>
+  <button onclick="buatEmail()"><span class="icon">📧</span>Buat Email</button>
+  <button onclick="lihatInbox()"><span class="icon">📬</span>Lihat Inbox</button>
+  <button onclick="copyEmail()"><span class="icon">📋</span>Copy Email</button>
+  <button onclick="location.reload()"><span class="icon">🔄</span>Refresh</button>
 
   <script>
-    function loadInbox() {
-      const user = document.getElementById('userInput').value.trim();
-      if (!user) return alert('Masukkan username!');
-      document.getElementById('emailUser').innerText = user;
-
-      fetch(`https://mailxstres.org/mailapi/inbox.php?user=${user}`)
-        .then(res => res.json())
-        .then(data => {
-          const inbox = document.getElementById('inbox');
-          inbox.innerHTML = '';
-
-          data.forEach(email => {
-            const div = document.createElement('div');
-            div.className = 'email';
-            div.innerHTML = `
-              <strong>Dari:</strong> ${email.from}<br>
-              <strong>Subjek:</strong> ${email.subject}<br>
-              <strong>Tanggal:</strong> ${email.date}<br>
-              <strong>OTP:</strong> ${email.otp || '(tidak ada)'}<br>
-              <button onclick="copyOTP('${email.otp}')">Salin OTP</button>
-              <details><summary>Lihat isi</summary><pre>${email.body}</pre></details>
-            `;
-            inbox.appendChild(div);
-          });
-        });
+    function buatEmail() {
+      const user = document.getElementById('username').value;
+      alert('Buat email: ' + user + '@mailxstres.org\n(Simulasikan backend Anda)');
     }
 
-    function copyOTP(code) {
-      if (!code) return alert('Tidak ada OTP di email ini.');
-      navigator.clipboard.writeText(code).then(() => {
-        alert('OTP disalin: ' + code);
-      });
+    function lihatInbox() {
+      const user = document.getElementById('username').value;
+      if (user) {
+        window.location.href = `inbox.php?email=${user}`;
+      } else {
+        alert("Masukkan username email terlebih dahulu!");
+      }
+    }
+
+    function copyEmail() {
+      const user = document.getElementById('username').value;
+      const email = `${user}@mailxstres.org`;
+      navigator.clipboard.writeText(email).then(() => alert("Email disalin: " + email));
     }
   </script>
 </body>
