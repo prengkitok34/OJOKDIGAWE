@@ -1,114 +1,40 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
+  <title>Email Generator</title>
   <meta charset="UTF-8">
-  <title>Email Domain Anda</title>
-  <style>
-    body {
-      background-color: #111;
-      color: white;
-      font-family: sans-serif;
-      text-align: center;
-      padding: 2rem;
-    }
-    input, button {
-      padding: 10px;
-      font-size: 1rem;
-      margin: 5px;
-    }
-    #inbox {
-      background: #1b1b1b;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 8px;
-    }
-    .btn {
-      cursor: pointer;
-    }
-    .otp {
-      background: #333;
-      color: lime;
-      font-weight: bold;
-      margin: 10px 0;
-      padding: 5px;
-      display: inline-block;
-    }
-  </style>
 </head>
 <body>
 
-  <h1>📬 Email Domain Anda</h1>
-  <p>Masukkan nama alamat email Anda (@mailxstres.org):</p>
+  <!-- Input dan Tombol -->
   <input type="text" id="username" placeholder="contoh: user123">
-  <br>
-  <button class="btn" onclick="createMailbox()">📤 Buat Email</button>
-  <button class="btn" onclick="loadInbox()">📥 Lihat Inbox</button>
-  <button class="btn" onclick="copyEmail()">📋 Copy Email</button>
-  <button class="btn" onclick="loadInbox()">🔄 Refresh</button>
+  <button onclick="buatEmail()">📥 Buat Email</button>
 
-  <div id="emailDisplay" style="margin-top:10px;"></div>
-  <div id="inbox"></div>
-
+  <!-- SCRIPT JS dipasang di bagian bawah -->
   <script>
-    const domain = "mailxstres.org";
+    function buatEmail() {
+      const username = document.getElementById("username").value.trim();
 
-    function copyEmail() {
-      const user = document.getElementById('username').value;
-      const fullEmail = `${user}@${domain}`;
-      navigator.clipboard.writeText(fullEmail);
-      alert("Alamat email disalin: " + fullEmail);
-    }
+      if (!username) {
+          alert("Masukkan username terlebih dahulu!");
+          return;
+      }
 
-    function createMailbox() {
-      const user = document.getElementById('username').value;
-      if (!user) return alert("Masukkan username terlebih dahulu!");
-      
-      fetch(`https://mail.${domain}/api/create-mailbox.php?email=${user}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "error") {
-            alert("Mailbox gagal dibuat atau sudah ada.");
-          } else {
-            alert("Mailbox berhasil dibuat: " + user + "@" + domain);
-            loadInbox();
-          }
-        }).catch(err => {
-          alert("Gagal menghubungi API.");
-          console.error(err);
-        });
-    }
+      const apiUrl = `https://mail.mailxstres.org/create-mailbox.php?username=${encodeURIComponent(username)}`;
 
-    function loadInbox() {
-      const user = document.getElementById('username').value;
-      if (!user) return alert("Masukkan username terlebih dahulu!");
-
-      fetch(`https://mail.${domain}/api/fetch-inbox.php?email=${user}`)
-        .then(res => res.json())
-        .then(data => {
-          const inboxDiv = document.getElementById('inbox');
-          inboxDiv.innerHTML = `<h2>Inbox</h2>`;
-
-          if (data.length === 0) {
-            inboxDiv.innerHTML += `<p>📭 Tidak ada email masuk.</p>`;
-            return;
-          }
-
-          data.forEach(email => {
-            const otpMatch = email.body.match(/\b\d{6}\b/); // cari OTP 6 digit
-            inboxDiv.innerHTML += `
-              <div style="border:1px solid #444; margin:10px; padding:10px; text-align:left;">
-                <b>Dari:</b> ${email.from}<br>
-                <b>Subjek:</b> ${email.subject}<br>
-                <b>Waktu:</b> ${email.date}<br><br>
-                <pre>${email.body}</pre>
-                ${otpMatch ? `<div class="otp">${otpMatch[0]} <button onclick="navigator.clipboard.writeText('${otpMatch[0]}')">Salin OTP</button></div>` : ''}
-              </div>
-            `;
+      fetch(apiUrl)
+          .then(response => response.json())
+          .then(data => {
+              if (data.type === "success") {
+                  alert("📫 Email berhasil dibuat: " + username + "@mailxstres.org");
+              } else {
+                  alert("❌ Gagal: " + data.msg);
+              }
+          })
+          .catch(error => {
+              console.error("Error:", error);
+              alert("❌ Gagal menghubungi server. Pastikan API aktif dan CORS diizinkan.");
           });
-        })
-        .catch(() => {
-          document.getElementById('inbox').innerHTML = `<p style="color:red;">❌ Gagal memuat email. Periksa koneksi Anda.</p>`;
-        });
     }
   </script>
 
