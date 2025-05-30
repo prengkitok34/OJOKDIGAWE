@@ -2,63 +2,137 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Email Domain Anda</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
       background-color: #111;
-      color: white;
-      font-family: sans-serif;
+      color: #fff;
       text-align: center;
-      padding-top: 80px;
+      padding: 40px;
     }
-    input, button {
+
+    input[type="text"] {
       padding: 10px;
-      margin: 5px;
-      border-radius: 8px;
+      font-size: 16px;
+      width: 300px;
+      border-radius: 5px;
       border: none;
     }
-    input {
-      width: 220px;
-    }
+
     button {
-      background-color: #eee;
+      padding: 10px 20px;
+      font-size: 14px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
+      background-color: #333;
+      color: white;
     }
-    .icon {
-      margin-right: 5px;
+
+    button:hover {
+      background-color: #555;
+    }
+
+    .notif {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #222;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 9999;
+      opacity: 0.95;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      display: none;
+    }
+
+    .notif.success {
+      background-color: #28a745;
+    }
+
+    .notif.error {
+      background-color: #dc3545;
     }
   </style>
 </head>
 <body>
-  <h1>📬 Email Domain Anda</h1>
-  <p>Masukkan nama alamat email Anda (<strong>@mailxstres.org</strong>):</p>
-  <input type="text" id="username" placeholder="misal: abc123">
+
+  <h2>📬 Email Domain Anda</h2>
+  <p>Masukkan nama alamat email Anda (@sherrilleyburton69.xyz):</p>
+  
+  <input type="text" id="emailInput" placeholder="misal: ne4mjngm">
   <br>
-  <button onclick="buatEmail()"><span class="icon">📧</span>Buat Email</button>
-  <button onclick="lihatInbox()"><span class="icon">📬</span>Lihat Inbox</button>
-  <button onclick="copyEmail()"><span class="icon">📋</span>Copy Email</button>
-  <button onclick="location.reload()"><span class="icon">🔄</span>Refresh</button>
+  <button onclick="buatEmail()">📧 Buat Email</button>
+  <button onclick="lihatInbox()">📥 Lihat Inbox</button>
+  <button onclick="copyEmail()">📋 Copy Email</button>
+  <button onclick="refreshInbox()">🔄 Refresh</button>
+
+  <div id="notif" class="notif"></div>
+
+  <div id="inboxArea" style="margin-top: 40px;">
+    <h3>Inbox</h3>
+    <p id="inboxStatus">Klik "Lihat Inbox" untuk memuat email.</p>
+  </div>
 
   <script>
+    function showNotif(message, type = 'success') {
+      const notif = document.getElementById('notif');
+      notif.textContent = message;
+      notif.className = 'notif ' + type;
+      notif.style.display = 'block';
+
+      setTimeout(() => {
+        notif.style.display = 'none';
+      }, 3000); // sembunyi setelah 3 detik
+    }
+
     function buatEmail() {
-      const user = document.getElementById('username').value;
-      alert('Buat email: ' + user + '@mailxstres.org\n(Simulasikan backend Anda)');
+      const email = getEmail();
+      if (!email) return;
+
+      // Contoh simulasi sukses
+      showNotif("Email dibuat: " + email, "success");
     }
 
     function lihatInbox() {
-      const user = document.getElementById('username').value;
-      if (user) {
-        window.location.href = `inbox.php?email=${user}`;
-      } else {
-        alert("Masukkan username email terlebih dahulu!");
-      }
+      const email = getEmail();
+      if (!email) return;
+
+      // Simulasi gagal fetch inbox
+      showNotif("Gagal memuat email. Periksa koneksi Anda.", "error");
+      document.getElementById("inboxStatus").textContent = "❌ Gagal memuat email. Periksa koneksi Anda.";
     }
 
     function copyEmail() {
-      const user = document.getElementById('username').value;
-      const email = `${user}@mailxstres.org`;
-      navigator.clipboard.writeText(email).then(() => alert("Email disalin: " + email));
+      const email = getEmail();
+      if (!email) return;
+
+      navigator.clipboard.writeText(email).then(() => {
+        showNotif("Alamat email disalin!", "success");
+      }).catch(() => {
+        showNotif("Gagal menyalin email", "error");
+      });
+    }
+
+    function refreshInbox() {
+      lihatInbox(); // bisa panggil ulang lihatInbox atau logika refresh sendiri
+    }
+
+    function getEmail() {
+      const username = document.getElementById("emailInput").value.trim();
+      if (!username) {
+        showNotif("Masukkan nama email terlebih dahulu!", "error");
+        return null;
+      }
+      return username + "@sherrilleyburton69.xyz";
     }
   </script>
+
 </body>
 </html>
