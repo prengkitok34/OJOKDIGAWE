@@ -1,13 +1,13 @@
 <div id="inbox"></div>
 
 <script>
-function ambilinbox(username) {
+function ambilInbox(username) {
     fetch("https://yourdomain.com/inbox.php?u=" + username)
-    .then(res => res.json())
-    .then(data => {
-        let html = "<h3>Inbox untuk: " + username + "@mailxstres.org</h3>";
-        data.forEach(email => {
-            html += `
+        .then(res => res.json())
+        .then(data => {
+            let html = `<h3>Inbox untuk: ` + username + `@mailxstres.org</h3>`;
+            data.forEach(email => {
+                html += `
                 <div style="border:1px solid #ccc; padding:10px; margin:5px;">
                     <b>Dari:</b> ${email.from}<br>
                     <b>Subjek:</b> ${email.subject}<br>
@@ -15,12 +15,12 @@ function ambilinbox(username) {
                     <b>Isi:</b> ${email.body}<br>
                     <b>Kode OTP:</b> <code>${email.otp}</code>
                 </div>
-            `;
+                `;
+            });
+            document.getElementById("inbox").innerHTML = html;
         });
-        document.getElementById("inbox").innerHTML = html;
-    });
 }
 
-// Contoh panggilan langsung
-ambilinbox("ujiji");
+// Contoh pemanggilan otomatis
+ambilInbox("ujiji");
 </script>
