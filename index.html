@@ -52,20 +52,15 @@
       display: none;
     }
 
-    .notif.success {
-      background-color: #28a745;
-    }
-
-    .notif.error {
-      background-color: #dc3545;
-    }
+    .notif.success { background-color: #28a745; }
+    .notif.error { background-color: #dc3545; }
   </style>
 </head>
 <body>
 
   <h2>📬 Email Domain Anda</h2>
-  <p>Masukkan nama alamat email Anda (@sherrilleyburton69.xyz):</p>
-  
+  <p>Masukkan nama alamat email Anda (<strong>@mailxstres.org</strong>):</p>
+
   <input type="text" id="emailInput" placeholder="misal: ne4mjngm">
   <br>
   <button onclick="buatEmail()">📧 Buat Email</button>
@@ -86,42 +81,9 @@
       notif.textContent = message;
       notif.className = 'notif ' + type;
       notif.style.display = 'block';
-
       setTimeout(() => {
         notif.style.display = 'none';
-      }, 3000); // sembunyi setelah 3 detik
-    }
-
-    function buatEmail() {
-      const email = getEmail();
-      if (!email) return;
-
-      // Contoh simulasi sukses
-      showNotif("Email dibuat: " + email, "success");
-    }
-
-    function lihatInbox() {
-      const email = getEmail();
-      if (!email) return;
-
-      // Simulasi gagal fetch inbox
-      showNotif("Gagal memuat email. Periksa koneksi Anda.", "error");
-      document.getElementById("inboxStatus").textContent = "❌ Gagal memuat email. Periksa koneksi Anda.";
-    }
-
-    function copyEmail() {
-      const email = getEmail();
-      if (!email) return;
-
-      navigator.clipboard.writeText(email).then(() => {
-        showNotif("Alamat email disalin!", "success");
-      }).catch(() => {
-        showNotif("Gagal menyalin email", "error");
-      });
-    }
-
-    function refreshInbox() {
-      lihatInbox(); // bisa panggil ulang lihatInbox atau logika refresh sendiri
+      }, 3000);
     }
 
     function getEmail() {
@@ -130,8 +92,75 @@
         showNotif("Masukkan nama email terlebih dahulu!", "error");
         return null;
       }
-      return username + "@sherrilleyburton69.xyz";
+      return username.toLowerCase() + "@mailxstres.org";
     }
+
+    function buatEmail() {
+      const email = getEmail();
+      if (!email) return;
+      showNotif("Email dibuat: " + email, "success");
+    }
+
+    function copyEmail() {
+      const email = getEmail();
+      if (!email) return;
+      navigator.clipboard.writeText(email).then(() => {
+        showNotif("Alamat email disalin!", "success");
+      }).catch(() => {
+        showNotif("Gagal menyalin email", "error");
+      });
+    }
+
+    function lihatInbox() {
+      const username = document.getElementById("emailInput").value.trim().toLowerCase();
+      if (!username) {
+        showNotif("Masukkan nama email terlebih dahulu!", "error");
+        return;
+      }
+
+      fetch(`/inbox.php?username=${encodeURIComponent(username)}`)
+        .then(response => {
+          if (!response.ok) throw new Error("Gagal mengambil inbox");
+          return response.json();
+        })
+        .then(data => {
+          const inboxArea = document.getElementById("inboxStatus");
+          if (!data || data.length === 0) {
+            inboxArea.innerHTML = "📭 Tidak ada email masuk.";
+            return;
+          }
+
+          let html = '';
+          data.forEach((email, index) => {
+            html += `
+              <div style="border: 1px solid #555; margin: 10px auto; max-width: 600px; padding: 10px; background-color: #222; border-radius: 8px; text-align: left;">
+                <strong>📨 ${email.subject}</strong><br>
+                <small>🧑‍💻 ${email.from} | 🕒 ${email.date}</small><br><br>
+                🔢 <b>OTP:</b> ${email.otp || '(tidak ditemukan)'}<br><br>
+                📝 <em>${email.snippet}</em>
+              </div>
+            `;
+          });
+
+          inboxArea.innerHTML = html;
+          showNotif("Inbox berhasil dimuat", "success");
+        })
+        .catch(error => {
+          console.error(error);
+          document.getElementById("inboxStatus").innerHTML = "❌ Gagal memuat email.";
+          showNotif("Gagal memuat inbox", "error");
+        });
+    }
+
+    function refreshInbox() {
+      lihatInbox();
+    }
+
+    // Auto-refresh tiap 5 detik
+    setInterval(() => {
+      const username = document.getElementById("emailInput").value.trim();
+      if (username) refreshInbox();
+    }, 5000);
   </script>
 
 </body>
