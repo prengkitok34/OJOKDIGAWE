@@ -1,94 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
   <title>Inbox Mailxstres</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    input, button { padding: 8px; margin: 5px; }
-    .email { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    .email { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    button { margin-top: 5px; }
   </style>
 </head>
 <body>
-  <h2>Email Viewer @mailxstres.org</h2>
-  <input type="text" id="username" placeholder="Masukkan username">
-  <button onclick="copyEmail()">Salin Email</button>
+  <h2>Inbox untuk: <span id="emailUser"></span>@mailxstres.org</h2>
+  <input type="text" id="userInput" placeholder="Masukkan username...">
   <button onclick="loadInbox()">Lihat Inbox</button>
 
-  <p>Email: <span id="emailDisplay">-</span></p>
   <div id="inbox"></div>
 
   <script>
-    let currentUsername = "";
+    function loadInbox() {
+      const user = document.getElementById('userInput').value.trim();
+      if (!user) return alert('Masukkan username!');
+      document.getElementById('emailUser').innerText = user;
 
-    function copyEmail() {
-      const user = document.getElementById("username").value.trim();
-      if (!user) return alert("Isi username dulu");
-      const fullEmail = user + "@mailxstres.org";
-      navigator.clipboard.writeText(fullEmail);
-      document.getElementById("emailDisplay").textContent = fullEmail;
-      currentUsername = user;
-      loadInbox();
-    }
+      fetch(`https://mailxstres.org/mailapi/inbox.php?user=${user}`)
+        .then(res => res.json())
+        .then(data => {
+          const inbox = document.getElementById('inbox');
+          inbox.innerHTML = '';
 
-    async function loadInbox() {
-      if (!currentUsername) {
-        currentUsername = document.getElementById("username").value.trim();
-        if (!currentUsername) return;
-      }
-      document.getElementById("emailDisplay").textContent = currentUsername + "@mailxstres.org";
-      const inboxDiv = document.getElementById("inbox");
-      inboxDiv.innerHTML = "Memuat...";
-
-      try {
-        const res = await fetch(`https://mailxstres.org/inbox.php?user=${currentUsername}`);
-        const data = await res.json();
-        inboxDiv.innerHTML = "";
-
-        if (data.length === 0) {
-          inboxDiv.innerHTML = "<p><i>Tidak ada email.</i></p>";
-          return;
-        }
-
-        data.forEach(email => {
-          const div = document.createElement("div");
-          div.className = "email";
-          div.innerHTML = `
-            <b>Dari:</b> ${email.from}<br>
-            <b>Subjek:</b> ${email.subject}<br>
-            <button onclick="viewEmail('${email.uid}')">Buka Email</button>
-            <button onclick="copyOTP('${email.uid}')">Salin Kode OTP</button>
-            <div id="body-${email.uid}" style="margin-top: 5px;"></div>
-          `;
-          inboxDiv.appendChild(div);
+          data.forEach(email => {
+            const div = document.createElement('div');
+            div.className = 'email';
+            div.innerHTML = `
+              <strong>Dari:</strong> ${email.from}<br>
+              <strong>Subjek:</strong> ${email.subject}<br>
+              <strong>Tanggal:</strong> ${email.date}<br>
+              <strong>OTP:</strong> ${email.otp || '(tidak ada)'}<br>
+              <button onclick="copyOTP('${email.otp}')">Salin OTP</button>
+              <details><summary>Lihat isi</summary><pre>${email.body}</pre></details>
+            `;
+            inbox.appendChild(div);
+          });
         });
-      } catch (e) {
-        inboxDiv.innerHTML = "<p>Gagal mengambil email.</p>";
-      }
     }
 
-    async function viewEmail(uid) {
-      const res = await fetch(`https://mailxstres.org/view.php?uid=${uid}&user=${currentUsername}`);
-      const data = await res.text();
-      document.getElementById("body-" + uid).innerHTML = "<pre>" + data + "</pre>";
+    function copyOTP(code) {
+      if (!code) return alert('Tidak ada OTP di email ini.');
+      navigator.clipboard.writeText(code).then(() => {
+        alert('OTP disalin: ' + code);
+      });
     }
-
-    async function copyOTP(uid) {
-      const res = await fetch(`https://mailxstres.org/view.php?uid=${uid}&user=${currentUsername}`);
-      const body = await res.text();
-      const match = body.match(/\b\d{6}\b/);
-      if (match) {
-        navigator.clipboard.writeText(match[0]);
-        alert("Kode OTP disalin: " + match[0]);
-      } else {
-        alert("Tidak ditemukan kode OTP.");
-      }
-    }
-
-    // Auto-refresh setiap 3 detik
-    setInterval(() => {
-      if (currentUsername) loadInbox();
-    }, 3000);
   </script>
 </body>
 </html>
