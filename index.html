@@ -1,117 +1,62 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Email Domain Anda - sherrilleyburton69.xyz</title>
-    <style>
-        body {
-            background: #0f0f0f;
-            color: #f5f5f5;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding-top: 50px;
-        }
-        input, button, select {
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: none;
-            margin: 5px;
-        }
-        #inbox {
-            margin-top: 30px;
-            text-align: left;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            background: #1a1a1a;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .email-item {
-            border-bottom: 1px solid #333;
-            padding: 10px 0;
-        }
-        .controls {
-            margin-top: 10px;
-        }
-        #toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #0f0f0f;
-            color: #00ffae;
-            padding: 12px 20px;
-            border-radius: 5px;
-            border: 1px solid #00ffae;
-            box-shadow: 0 0 10px #000;
-            display: none;
-            z-index: 9999;
-            transition: opacity 0.3s ease;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Email @mailxstres.org</title>
+  <style>
+    body { background: #111; color: #fff; font-family: sans-serif; text-align: center; }
+    #inbox { margin-top: 20px; background: #222; padding: 20px; border-radius: 8px; max-width: 700px; margin-left: auto; margin-right: auto; }
+    button { margin: 5px; padding: 5px 10px; }
+    input { padding: 5px; width: 200px; text-align: center; }
+  </style>
 </head>
 <body>
-    <h1>📬 Email Domain Anda</h1>
-    <p>Masukkan nama alamat email Anda (@sherrilleyburton69.xyz):</p>
-    <input type="text" id="emailName" placeholder="contoh: pengguna123">
-    <div class="controls">
-        <button onclick="generateEmail()">🎲 Buat Email</button>
-        <button onclick="loadInbox()">📥 Lihat Inbox</button>
-        <button onclick="copyEmail()">📋 Copy Email</button>
-        <button onclick="loadInbox()">🔄 Refresh</button>
-    </div>
+  <h2>📧 Email <b>@mailxstres.org</b></h2>
+  <input id="user" placeholder="username">
+  <button onclick="copyEmail()">📋 Salin Alamat</button>
 
-    <div id="inbox" style="display:none;">
-        <h2>Inbox</h2>
-        <div id="emailList">
-            <p>🔄 Memuat email...</p>
-        </div>
-    </div>
+  <div id="inbox"><b>Inbox</b><br><span id="status" style="color:red"></span></div>
 
-    <div id="toast"></div>
+  <script>
+    function copyEmail() {
+      let user = document.getElementById("user").value;
+      let email = user + "@mailxstres.org";
+      navigator.clipboard.writeText(email);
+      alert("Disalin: " + email);
+    }
 
-    <script>
-        let currentEmail = '';
+    function loadInbox() {
+      let user = document.getElementById("user").value;
+      if (!user) return;
 
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.style.display = 'block';
-            toast.style.opacity = '1';
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.style.display = 'none', 300);
-            }, 2000);
-        }
-
-        function generateEmail() {
-            const randomName = Math.random().toString(36).substring(2, 10);
-            document.getElementById('emailName').value = randomName;
-            showToast(`📨 Email dibuat: ${randomName}@sherrilleyburton69.xyz`);
-        }
-
-        function loadInbox() {
-            const name = document.getElementById('emailName').value.trim();
-            if (!name) return;
-            currentEmail = `${name}@sherrilleyburton69.xyz`;
-
-            showToast(`📥 Memuat inbox untuk ${currentEmail}`);
-            document.getElementById('inbox').style.display = 'block';
-
-            // Dummy tampilan, karena email aslinya masuk di Private Email
-            document.getElementById('emailList').innerHTML = `
-                <p>📬 Email untuk <b>${currentEmail}</b> akan dikirim ke inbox asli (misalnya Gmail / Private Email).</p>
-                <p>🔐 Tampilan inbox real memerlukan VPS atau integrasi backend.</p>
+      fetch("http://203.161.55.116//inbox.php?user=" + user) // ← ganti IP kamu
+        .then(r => r.json())
+        .then(data => {
+          let inbox = document.getElementById("inbox");
+          inbox.innerHTML = "<b>Inbox</b><br>";
+          if (data.error) {
+            inbox.innerHTML += "<span style='color:red'>" + data.error + "</span>";
+            return;
+          }
+          if (data.length == 0) {
+            inbox.innerHTML += "<i>Inbox kosong</i>";
+            return;
+          }
+          data.forEach(e => {
+            inbox.innerHTML += `
+              <div style="text-align:left;margin:10px 0;padding:10px;border:1px solid #444;border-radius:5px">
+                <b>Dari:</b> ${e.from}<br>
+                <b>Subjek:</b> ${e.subject}<br>
+                <b>Tanggal:</b> ${e.date}<br>
+                <b>OTP:</b> ${e.otp || '-'} 
+                <button onclick="navigator.clipboard.writeText('${e.otp}')">Salin</button>
+              </div>
             `;
-        }
+          });
+        });
+    }
 
-        function copyEmail() {
-            if (!currentEmail) return;
-            navigator.clipboard.writeText(currentEmail).then(() => {
-                showToast("📋 Alamat email disalin!");
-            });
-        }
-    </script>
+    setInterval(loadInbox, 3000);
+  </script>
 </body>
 </html>
