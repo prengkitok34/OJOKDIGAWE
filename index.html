@@ -1,8 +1,26 @@
-function ambilInbox(username) {
-  fetch("https://yourdomain.com/inbox.php?u=" + username)
+<div id="inbox"></div>
+
+<script>
+function ambilinbox(username) {
+    fetch("https://yourdomain.com/inbox.php?u=" + username)
     .then(res => res.json())
     .then(data => {
-      // Tampilkan email di halaman
-      console.log(data);
+        let html = "<h3>Inbox untuk: " + username + "@mailxstres.org</h3>";
+        data.forEach(email => {
+            html += `
+                <div style="border:1px solid #ccc; padding:10px; margin:5px;">
+                    <b>Dari:</b> ${email.from}<br>
+                    <b>Subjek:</b> ${email.subject}<br>
+                    <b>Tanggal:</b> ${email.date}<br>
+                    <b>Isi:</b> ${email.body}<br>
+                    <b>Kode OTP:</b> <code>${email.otp}</code>
+                </div>
+            `;
+        });
+        document.getElementById("inbox").innerHTML = html;
     });
 }
+
+// Contoh panggilan langsung
+ambilinbox("ujiji");
+</script>
