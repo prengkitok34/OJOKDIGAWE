@@ -1,42 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Email Generator</title>
-  <meta charset="UTF-8">
-</head>
-<body>
-
-  <!-- Input dan Tombol -->
-  <input type="text" id="username" placeholder="contoh: user123">
-  <button onclick="buatEmail()">📥 Buat Email</button>
-
-  <!-- SCRIPT JS dipasang di bagian bawah -->
-  <script>
-    function buatEmail() {
-      const username = document.getElementById("username").value.trim();
-
-      if (!username) {
-          alert("Masukkan username terlebih dahulu!");
-          return;
-      }
-
-      const apiUrl = `https://mail.mailxstres.org/create-mailbox.php?username=${encodeURIComponent(username)}`;
-
-      fetch(apiUrl)
-          .then(response => response.json())
-          .then(data => {
-              if (data.type === "success") {
-                  alert("📫 Email berhasil dibuat: " + username + "@mailxstres.org");
-              } else {
-                  alert("❌ Gagal: " + data.msg);
-              }
-          })
-          .catch(error => {
-              console.error("Error:", error);
-              alert("❌ Gagal menghubungi server. Pastikan API aktif dan CORS diizinkan.");
-          });
-    }
-  </script>
-
-</body>
-</html>
+function ambilInbox(username) {
+  fetch("https://yourdomain.com/inbox.php?u=" + username)
+    .then(res => res.json())
+    .then(data => {
+      // Tampilkan email di halaman
+      console.log(data);
+    });
+}
