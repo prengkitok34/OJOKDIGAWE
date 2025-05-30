@@ -1,167 +1,64 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Email Domain Anda</title>
+  <meta charset="UTF-8" />
+  <title>Mailxstres Inbox</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #fff;
-      text-align: center;
-      padding: 40px;
-    }
-
-    input[type="text"] {
-      padding: 10px;
-      font-size: 16px;
-      width: 300px;
-      border-radius: 5px;
-      border: none;
-    }
-
-    button {
-      padding: 10px 20px;
-      font-size: 14px;
-      margin: 5px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background-color: #333;
-      color: white;
-    }
-
-    button:hover {
-      background-color: #555;
-    }
-
-    .notif {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background-color: #222;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 9999;
-      opacity: 0.95;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      display: none;
-    }
-
-    .notif.success { background-color: #28a745; }
-    .notif.error { background-color: #dc3545; }
+    body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
+    input, button { padding: 8px; margin: 5px; }
+    #emailList { margin-top: 20px; background: #fff; padding: 10px; border-radius: 5px; }
+    .emailItem { border-bottom: 1px solid #ccc; padding: 8px 0; }
+    .otp { font-weight: bold; color: green; }
   </style>
 </head>
 <body>
+  <h2>📥 Mailxstres Inbox Viewer</h2>
+  <label>Email Username:</label>
+  <input type="text" id="username" placeholder="contoh: testing" />
+  <button onclick="copyEmail()">📋 Salin Alamat Email</button>
+  <button onclick="loadInbox()">🔄 Lihat Inbox</button>
+  <div id="emailAddress" style="margin-top: 10px;"></div>
 
-  <h2>📬 Email Domain Anda</h2>
-  <p>Masukkan nama alamat email Anda (<strong>@mailxstres.org</strong>):</p>
-
-  <input type="text" id="emailInput" placeholder="misal: ne4mjngm">
-  <br>
-  <button onclick="buatEmail()">📧 Buat Email</button>
-  <button onclick="lihatInbox()">📥 Lihat Inbox</button>
-  <button onclick="copyEmail()">📋 Copy Email</button>
-  <button onclick="refreshInbox()">🔄 Refresh</button>
-
-  <div id="notif" class="notif"></div>
-
-  <div id="inboxArea" style="margin-top: 40px;">
-    <h3>Inbox</h3>
-    <p id="inboxStatus">Klik "Lihat Inbox" untuk memuat email.</p>
-  </div>
+  <div id="emailList">Belum ada email...</div>
 
   <script>
-    function showNotif(message, type = 'success') {
-      const notif = document.getElementById('notif');
-      notif.textContent = message;
-      notif.className = 'notif ' + type;
-      notif.style.display = 'block';
-      setTimeout(() => {
-        notif.style.display = 'none';
-      }, 3000);
-    }
-
-    function getEmail() {
-      const username = document.getElementById("emailInput").value.trim();
-      if (!username) {
-        showNotif("Masukkan nama email terlebih dahulu!", "error");
-        return null;
-      }
-      return username.toLowerCase() + "@mailxstres.org";
-    }
-
-    function buatEmail() {
-      const email = getEmail();
-      if (!email) return;
-      showNotif("Email dibuat: " + email, "success");
-    }
-
     function copyEmail() {
-      const email = getEmail();
-      if (!email) return;
-      navigator.clipboard.writeText(email).then(() => {
-        showNotif("Alamat email disalin!", "success");
-      }).catch(() => {
-        showNotif("Gagal menyalin email", "error");
-      });
+      const user = document.getElementById("username").value.trim();
+      const email = user + "@mailxstres.org";
+      navigator.clipboard.writeText(email);
+      document.getElementById("emailAddress").innerText = "✅ Disalin: " + email;
     }
 
-    function lihatInbox() {
-      const username = document.getElementById("emailInput").value.trim().toLowerCase();
-      if (!username) {
-        showNotif("Masukkan nama email terlebih dahulu!", "error");
-        return;
-      }
-
-      fetch(`/inbox.php?username=${encodeURIComponent(username)}`)
-        .then(response => {
-          if (!response.ok) throw new Error("Gagal mengambil inbox");
-          return response.json();
-        })
+    function loadInbox() {
+      const user = document.getElementById("username").value.trim();
+      fetch("inbox.php?user=" + encodeURIComponent(user))
+        .then(res => res.json())
         .then(data => {
-          const inboxArea = document.getElementById("inboxStatus");
-          if (!data || data.length === 0) {
-            inboxArea.innerHTML = "📭 Tidak ada email masuk.";
+          const list = document.getElementById("emailList");
+          list.innerHTML = "";
+          if (data.length === 0) {
+            list.innerHTML = "📭 Tidak ada email masuk.";
             return;
           }
-
-          let html = '';
-          data.forEach((email, index) => {
-            html += `
-              <div style="border: 1px solid #555; margin: 10px auto; max-width: 600px; padding: 10px; background-color: #222; border-radius: 8px; text-align: left;">
-                <strong>📨 ${email.subject}</strong><br>
-                <small>🧑‍💻 ${email.from} | 🕒 ${email.date}</small><br><br>
-                🔢 <b>OTP:</b> ${email.otp || '(tidak ditemukan)'}<br><br>
-                📝 <em>${email.snippet}</em>
-              </div>
+          data.forEach(mail => {
+            const div = document.createElement("div");
+            div.className = "emailItem";
+            div.innerHTML = `
+              <b>From:</b> ${mail.from}<br>
+              <b>Subject:</b> ${mail.subject}<br>
+              <b>OTP:</b> <span class="otp">${mail.otp}</span>
+              <button onclick="navigator.clipboard.writeText('${mail.otp}')">📋 Salin OTP</button><br>
+              <hr><pre>${mail.body}</pre>
             `;
+            list.appendChild(div);
           });
-
-          inboxArea.innerHTML = html;
-          showNotif("Inbox berhasil dimuat", "success");
-        })
-        .catch(error => {
-          console.error(error);
-          document.getElementById("inboxStatus").innerHTML = "❌ Gagal memuat email.";
-          showNotif("Gagal memuat inbox", "error");
         });
     }
 
-    function refreshInbox() {
-      lihatInbox();
-    }
-
-    // Auto-refresh tiap 5 detik
     setInterval(() => {
-      const username = document.getElementById("emailInput").value.trim();
-      if (username) refreshInbox();
-    }, 5000);
+      const user = document.getElementById("username").value.trim();
+      if (user) loadInbox();
+    }, 3000);
   </script>
-
 </body>
 </html>
