@@ -1,55 +1,116 @@
-<?php
-// Konfigurasi Mailcow API
-$mailcow_api = "https://mail.mailxstres.org/api/v1/add/mailbox";
-$api_key = "41109F-37B565-C9782E-484E0A-DBB6C1"; // ganti dengan milikmu
-$domain = "mailxstres.org";
-
-// Fungsi buat username random
-function generateRandomUsername($length = 8) {
-    $chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    $username = '';
-    for ($i = 0; $i < $length; $i++) {
-        $username .= $chars[rand(0, strlen($chars) - 1)];
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Domain Anda</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
     }
-    return $username;
-}
+    input, button {
+      padding: 10px;
+      font-size: 1rem;
+      margin: 5px;
+    }
+    #inbox {
+      background: #1b1b1b;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 8px;
+    }
+    .btn {
+      cursor: pointer;
+    }
+    .otp {
+      background: #333;
+      color: lime;
+      font-weight: bold;
+      margin: 10px 0;
+      padding: 5px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
 
-$username = generateRandomUsername();
-$password = bin2hex(random_bytes(6)); // password random
+  <h1>📬 Email Domain Anda</h1>
+  <p>Masukkan nama alamat email Anda (@mailxstres.org):</p>
+  <input type="text" id="username" placeholder="contoh: user123">
+  <br>
+  <button class="btn" onclick="createMailbox()">📤 Buat Email</button>
+  <button class="btn" onclick="loadInbox()">📥 Lihat Inbox</button>
+  <button class="btn" onclick="copyEmail()">📋 Copy Email</button>
+  <button class="btn" onclick="loadInbox()">🔄 Refresh</button>
 
-// Payload untuk request API
-$data = [
-    "local_part" => $username,
-    "domain" => $domain,
-    "name" => $username,
-    "password" => $password,
-    "quota" => 1024, // dalam MB
-    "active" => 1,
-    "tls_enforce_in" => true,
-    "tls_enforce_out" => true
-];
+  <div id="emailDisplay" style="margin-top:10px;"></div>
+  <div id="inbox"></div>
 
-// Kirim request POST ke Mailcow API
-$ch = curl_init($mailcow_api);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "X-API-Key: $api_key",
-    "Content-Type: application/json"
-]);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+  <script>
+    const domain = "mailxstres.org";
 
-$response = curl_exec($ch);
-$http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+    function copyEmail() {
+      const user = document.getElementById('username').value;
+      const fullEmail = `${user}@${domain}`;
+      navigator.clipboard.writeText(fullEmail);
+      alert("Alamat email disalin: " + fullEmail);
+    }
 
-// Tampilkan hasil
-if ($http_status == 200) {
-    echo "✅ Email berhasil dibuat:\n";
-    echo "📧 Email: {$username}@{$domain}\n";
-    echo "🔑 Password: {$password}\n";
-} else {
-    echo "❌ Gagal membuat email. HTTP Status: $http_status\n";
-    echo "Respon: $response\n";
-}
-?>
+    function createMailbox() {
+      const user = document.getElementById('username').value;
+      if (!user) return alert("Masukkan username terlebih dahulu!");
+      
+      fetch(`https://mail.${domain}/api/create-mailbox.php?email=${user}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "error") {
+            alert("Mailbox gagal dibuat atau sudah ada.");
+          } else {
+            alert("Mailbox berhasil dibuat: " + user + "@" + domain);
+            loadInbox();
+          }
+        }).catch(err => {
+          alert("Gagal menghubungi API.");
+          console.error(err);
+        });
+    }
+
+    function loadInbox() {
+      const user = document.getElementById('username').value;
+      if (!user) return alert("Masukkan username terlebih dahulu!");
+
+      fetch(`https://mail.${domain}/api/fetch-inbox.php?email=${user}`)
+        .then(res => res.json())
+        .then(data => {
+          const inboxDiv = document.getElementById('inbox');
+          inboxDiv.innerHTML = `<h2>Inbox</h2>`;
+
+          if (data.length === 0) {
+            inboxDiv.innerHTML += `<p>📭 Tidak ada email masuk.</p>`;
+            return;
+          }
+
+          data.forEach(email => {
+            const otpMatch = email.body.match(/\b\d{6}\b/); // cari OTP 6 digit
+            inboxDiv.innerHTML += `
+              <div style="border:1px solid #444; margin:10px; padding:10px; text-align:left;">
+                <b>Dari:</b> ${email.from}<br>
+                <b>Subjek:</b> ${email.subject}<br>
+                <b>Waktu:</b> ${email.date}<br><br>
+                <pre>${email.body}</pre>
+                ${otpMatch ? `<div class="otp">${otpMatch[0]} <button onclick="navigator.clipboard.writeText('${otpMatch[0]}')">Salin OTP</button></div>` : ''}
+              </div>
+            `;
+          });
+        })
+        .catch(() => {
+          document.getElementById('inbox').innerHTML = `<p style="color:red;">❌ Gagal memuat email. Periksa koneksi Anda.</p>`;
+        });
+    }
+  </script>
+
+</body>
+</html>
