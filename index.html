@@ -2,7 +2,7 @@
 
 <script>
 function ambilInbox(username) {
-    fetch("https://yourdomain.com/inbox.php?u=" + username)
+    fetch("https://mailxstres.org/inbox.php?u=" + username)
         .then(res => res.json())
         .then(data => {
             let html = `<h3>Inbox untuk: ` + username + `@mailxstres.org</h3>`;
