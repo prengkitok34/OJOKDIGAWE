@@ -1,26 +1,122 @@
-<div id="inbox"></div>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Inbox Mailxstres</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input {
+      padding: 8px;
+      width: 60%;
+      margin: 10px;
+    }
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    #inbox {
+      margin-top: 20px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📩 Mailxstres Inbox</h1>
 
-<script>
-function ambilInbox(username) {
-    fetch("https://mailxstres.org/inbox.php?u=" + username)
-        .then(res => res.json())
-        .then(data => {
-            let html = `<h3>Inbox untuk: ` + username + `@mailxstres.org</h3>`;
-            data.forEach(email => {
-                html += `
-                <div style="border:1px solid #ccc; padding:10px; margin:5px;">
-                    <b>Dari:</b> ${email.from}<br>
-                    <b>Subjek:</b> ${email.subject}<br>
-                    <b>Tanggal:</b> ${email.date}<br>
-                    <b>Isi:</b> ${email.body}<br>
-                    <b>Kode OTP:</b> <code>${email.otp}</code>
-                </div>
-                `;
-            });
-            document.getElementById("inbox").innerHTML = html;
+    <input type="text" id="username" placeholder="Masukkan username email">
+    <button onclick="buatEmail()">Buat Email</button>
+    <button onclick="salinAlamat()">📋 Salin Alamat</button>
+
+    <p>Email aktif: <span id="alamat-email">@mailxstres.org</span></p>
+
+    <div id="inbox">Inbox akan muncul di sini...</div>
+  </div>
+
+  <script>
+    const domain = "mailxstres.org";
+    const apiKey = "19A7FB-0BC98B-F2DCA9-FB33DF-A41B97";
+
+    function buatEmail() {
+      const user = document.getElementById("username").value.trim();
+      if (!user) return alert("Isi username terlebih dahulu!");
+
+      fetch("https://mailxstres.org/api/v1/add/mailbox", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": apiKey
+        },
+        body: JSON.stringify({
+          local_part: user,
+          domain: domain,
+          name: user,
+          password: "Random123!",
+          quota: 100
+        })
+      })
+      .then(res => res.json())
+      .then(() => {
+        document.getElementById("alamat-email").textContent = `${user}@${domain}`;
+        loadInbox(user);
+      })
+      .catch(err => alert("Gagal membuat email: " + err));
+    }
+
+    function salinAlamat() {
+      const email = document.getElementById("alamat-email").textContent;
+      navigator.clipboard.writeText(email).then(() => {
+        alert("Alamat email disalin!");
+      });
+    }
+
+    function loadInbox(user) {
+      fetch(`https://mailxstres.org/api/v1/get/mailbox/${user}@${domain}`, {
+        headers: { "X-API-Key": apiKey }
+      })
+      .then(res => res.json())
+      .then(data => {
+        const inbox = document.getElementById("inbox");
+        inbox.innerHTML = "";
+        if (!Array.isArray(data)) {
+          inbox.textContent = "Belum ada email.";
+          return;
+        }
+        data.forEach(mail => {
+          const div = document.createElement("div");
+          div.innerHTML = `
+            <p><strong>Dari:</strong> ${mail.from}</p>
+            <p><strong>Subjek:</strong> ${mail.subject}</p>
+            <p><strong>OTP:</strong> ${ambilOTP(mail.text)}</p>
+            <hr>
+          `;
+          inbox.appendChild(div);
         });
-}
+      })
+      .catch(() => {
+        document.getElementById("inbox").textContent = "Gagal memuat inbox.";
+      });
+    }
 
-// Contoh pemanggilan otomatis
-ambilInbox("ujiji");
-</script>
+    function ambilOTP(text) {
+      const match = text.match(/\b\d{6}\b/);
+      return match ? match[0] : "(tidak ditemukan)";
+    }
+  </script>
+</body>
+</html>
