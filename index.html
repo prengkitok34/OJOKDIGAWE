@@ -1,121 +1,57 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Inbox Mailxstres</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inbox kodeverif.org</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: #f4f4f4;
-      padding: 20px;
-    }
-    .container {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input {
-      padding: 8px;
-      width: 60%;
-      margin: 10px;
-    }
-    button {
-      padding: 8px 12px;
-      margin: 5px;
-      cursor: pointer;
-    }
-    #inbox {
-      margin-top: 20px;
-      text-align: left;
-    }
+    body { font-family: sans-serif; text-align: center; background: #f7f7f7; padding: 20px; }
+    input, button { padding: 10px; font-size: 16px; margin: 5px; }
+    #inbox { margin-top: 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .email { background: white; padding: 10px; margin-bottom: 10px; border-radius: 5px; text-align: left; }
+    .otp { font-weight: bold; color: green; font-size: 18px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📩 Mailxstres Inbox</h1>
+  <h2>Email @kodeverif.org</h2>
+  <input type="text" id="username" placeholder="Masukkan username">
+  <button onclick="loadInbox()">📥 Lihat Inbox</button>
+  <button onclick="copyEmail()">📋 Salin Alamat Email</button>
 
-    <input type="text" id="username" placeholder="Masukkan username email">
-    <button onclick="buatEmail()">Buat Email</button>
-    <button onclick="salinAlamat()">📋 Salin Alamat</button>
-
-    <p>Email aktif: <span id="alamat-email">@mailxstres.org</span></p>
-
-    <div id="inbox">Inbox akan muncul di sini...</div>
-  </div>
+  <div id="emailDisplay" style="margin-top:10px;"></div>
+  <div id="inbox"></div>
 
   <script>
-    const domain = "mailxstres.org";
-    const apiKey = "19A7FB-0BC98B-F2DCA9-FB33DF-A41B97";
-
-    function buatEmail() {
-      const user = document.getElementById("username").value.trim();
-      if (!user) return alert("Isi username terlebih dahulu!");
-
-      fetch("https://mailxstres.org/api/v1/add/mailbox", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": apiKey
-        },
-        body: JSON.stringify({
-          local_part: user,
-          domain: domain,
-          name: user,
-          password: "Random123!",
-          quota: 100
-        })
-      })
-      .then(res => res.json())
-      .then(() => {
-        document.getElementById("alamat-email").textContent = `${user}@${domain}`;
-        loadInbox(user);
-      })
-      .catch(err => alert("Gagal membuat email: " + err));
+    function copyEmail() {
+      const username = document.getElementById('username').value;
+      const email = username + '@kodeverif.org';
+      navigator.clipboard.writeText(email);
+      alert('Alamat disalin: ' + email);
     }
 
-    function salinAlamat() {
-      const email = document.getElementById("alamat-email").textContent;
-      navigator.clipboard.writeText(email).then(() => {
-        alert("Alamat email disalin!");
-      });
-    }
+    function loadInbox() {
+      const username = document.getElementById('username').value;
+      const emailDiv = document.getElementById('emailDisplay');
+      emailDiv.innerHTML = `<strong>Inbox:</strong> ${username}@kodeverif.org`;
 
-    function loadInbox(user) {
-      fetch(`https://mailxstres.org/api/v1/get/mailbox/${user}@${domain}`, {
-        headers: { "X-API-Key": apiKey }
-      })
-      .then(res => res.json())
-      .then(data => {
-        const inbox = document.getElementById("inbox");
-        inbox.innerHTML = "";
-        if (!Array.isArray(data)) {
-          inbox.textContent = "Belum ada email.";
-          return;
-        }
-        data.forEach(mail => {
-          const div = document.createElement("div");
-          div.innerHTML = `
-            <p><strong>Dari:</strong> ${mail.from}</p>
-            <p><strong>Subjek:</strong> ${mail.subject}</p>
-            <p><strong>OTP:</strong> ${ambilOTP(mail.text)}</p>
-            <hr>
-          `;
-          inbox.appendChild(div);
+      fetch(`https://mail.kodeverif.org/api/mailbox.php?username=${username}`)
+        .then(res => res.json())
+        .then(data => {
+          const inbox = document.getElementById('inbox');
+          inbox.innerHTML = '';
+          data.forEach(email => {
+            const match = email.body.match(/\b\d{6}\b/);
+            inbox.innerHTML += `
+              <div class="email">
+                <div><strong>Subject:</strong> ${email.subject}</div>
+                <div><strong>From:</strong> ${email.from}</div>
+                <div><strong>Date:</strong> ${email.date}</div>
+                <div><strong>OTP:</strong> <span class="otp">${match ? match[0] : 'Tidak ditemukan'}</span> 
+                  <button onclick="navigator.clipboard.writeText('${match ? match[0] : ''}')">Salin OTP</button></div>
+              </div>
+            `;
+          });
         });
-      })
-      .catch(() => {
-        document.getElementById("inbox").textContent = "Gagal memuat inbox.";
-      });
-    }
-
-    function ambilOTP(text) {
-      const match = text.match(/\b\d{6}\b/);
-      return match ? match[0] : "(tidak ditemukan)";
     }
   </script>
 </body>
